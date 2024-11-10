@@ -8,6 +8,9 @@ from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny
 from .models import Expenses
 from django.http import Http404
+from django.utils import timezone
+from django.db.models.functions import TruncMonth
+from django.db.models import Sum
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -99,5 +102,16 @@ class ExpensesDetailView(APIView):
         expense.delete()
         return Response({"message":"Expense_deleted"},status=HTTP_200_OK)
     
-        
-
+class MonthlyExpenseSummeryView(APIView):
+    def get(self,request):
+        user = request.user
+        current_year = timezone.now().year
+        monthly_expenses = (
+            Expenses.objects.filter(user=user, date__year=current_year)
+            .annotate(month=TruncMonth('date'))
+            .values('month')
+            .annotate(total_amount=Sum('amount'))
+            .order_by('month')
+        )
+        return Response(monthly_expenses,status=HTTP_200_OK)
+    
