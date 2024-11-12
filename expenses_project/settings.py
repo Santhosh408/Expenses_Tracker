@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'expenses_app',
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -61,8 +62,7 @@ REST_FRAMEWORK = {
 ],
     'DEFAULT_PERMISSION_CLASSES' : [
     'rest_framework.permissions.IsAuthenticated'
-]
-}
+]}
 
 
 

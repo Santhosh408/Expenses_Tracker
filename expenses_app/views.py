@@ -6,8 +6,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny
-from .models import Expenses
-from django.http import Http404
+from .models import Expenses; from django.http import Http404
 from django.utils import timezone
 from django.db.models.functions import TruncMonth
 from django.db.models import Sum
@@ -107,11 +106,35 @@ class MonthlyExpenseSummeryView(APIView):
         user = request.user
         current_year = timezone.now().year
         monthly_expenses = (
-            Expenses.objects.filter(user=user, date__year=current_year)
-            .annotate(month=TruncMonth('date'))
-            .values('month')
-            .annotate(total_amount=Sum('amount'))
+            Expenses.objects.filter(user=user)
+            .annotate(month=TruncMonth('date'))  
+            .values('month') 
+            .annotate(total_amount=Sum('amount')) 
             .order_by('month')
         )
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        year = request.query_params.get('year')
+
+        if year:
+            monthly_expenses = monthly_expenses.filter(date__year = year)
+
+        if start_date and end_date:
+                monthly_expenses = monthly_expenses.filter(date__range=[start_date,end_date])
+
+        sort_by = request.query_params.get('sort_by','month') 
+        sort_order = request.query_params.get('sort_order','asc') 
+
+        if sort_by == 'total_amount':
+            if sort_order == 'desc':
+                monthly_expenses = monthly_expenses.order_by('-total_amount')
+            else:
+                monthly_expenses = monthly_expenses.order_by('total_amount')
+        elif sort_by == 'month':
+            if sort_order == 'desc':
+                monthly_expenses = monthly_expenses.order_by('-month')
+            else:
+                monthly_expenses = monthly_expenses.order_by('month')
+
         return Response(monthly_expenses,status=HTTP_200_OK)
     
